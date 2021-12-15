@@ -35,9 +35,11 @@ library(car)
 
 library(arrow)
 library(tibble)
+library(effects)
+
 
 ########## Settings and data getting ###########
-nAGQ = 0 # Set to 1 for eventual analysis
+nAGQ = 1 # Set to 1 for eventual analysis
 plotPrefix = "Plots/"
 
 # Set and Get directories
@@ -106,6 +108,10 @@ data$Time2[data$Time == "3m"] = "4) 3m "
 
 # testing = 'Main effect' # Else set to Interaction effect (or Main effect)
 formula <- subgen.bis ~ Time2 * Treatment + (1|Diernr)
+# formula <- presubgen.bis ~ Time2 * Treatment + (1|Diernr)
+# formula <- pons ~ Time2 * Treatment + (1|Diernr)
+# formula <- hippocampus.L ~ Time2 * Treatment + (1|Diernr)
+
 
 # Model
 d0.1 <- lmer(formula,data=data)
@@ -119,18 +125,39 @@ d0.6 <- glmer(formula,data=data, family = Gamma(link = "log"),glmerControl(optim
 d0.7 <- glmer(formula,data=data, family = inverse.gaussian(link = "identity"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)),nAGQ = nAGQ)
 d0.8 <- glmer(formula,data=data, family = inverse.gaussian(link = "inverse"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)),nAGQ = nAGQ)
 d0.9 <- glmer(formula,data=data, family = inverse.gaussian(link = "log"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)),nAGQ = nAGQ)
-  
+ 
+d0.1 <- lmer(formula,data=data)
+d0.2 <- glmer(formula,data=data, family = gaussian(link = "inverse"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+d0.3 <- glmer(formula,data=data, family = gaussian(link = "log"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+
+d0.4 <- glmer(formula,data=data, family = Gamma(link = "identity"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+d0.5 <- glmer(formula,data=data, family = Gamma(link = "inverse"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+d0.6 <- glmer(formula,data=data, family = Gamma(link = "log"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+
+d0.7 <- glmer(formula,data=data, family = inverse.gaussian(link = "identity"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+d0.8 <- glmer(formula,data=data, family = inverse.gaussian(link = "inverse"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+d0.9 <- glmer(formula,data=data, family = inverse.gaussian(link = "log"),glmerControl(optimizer= "bobyqa", optCtrl = list(maxfun = 100000)))
+
+
+ 
 modelNames = c(d0.1,d0.2,d0.3,d0.4,d0.5,d0.6,d0.7,d0.8,d0.9)
   
 # Model Selection
 tabel <- cbind(AIC(d0.1), AIC(d0.2), AIC(d0.3), AIC(d0.4), AIC(d0.5), AIC(d0.6), AIC(d0.7), AIC(d0.8), AIC(d0.9))
 chosenModel = modelNames[which(tabel == min(tabel))] # Get model with lowest AIC
-  
+# chosenModel = d0.1
+
 Anova(chosenModel[[1]]) # Run Anova, double square brackets because of list properties
 
 emmeans0.1 <- emmeans(chosenModel[[1]], pairwise ~ Treatment | Time2, adjust ="fdr", type = "response")
+emmeans0.1 <- emmeans(chosenModel[[1]], pairwise ~ Treatment | Time2, type = "response")
+
+# emmeans0.1 <- emmeans(chosenModel[[1]], pairwise ~ Time2 | Treatment, adjust ="fdr", type = "response")
+# emmeans0.1 <- emmeans(chosenModel[[1]], pairwise ~ Time2 * Treatment, type = "response")
+
 emm0.1 <- summary(emmeans0.1)$emmeans
 emmeans0.1$contrasts
+plot(effect("Time2:Treatment ", chosenModel[[1]])) #just to check
 
 pd <- position_dodge(0.01) # move them .05 to the left and right
 
@@ -144,10 +171,21 @@ ggplot(emm0.1, aes(x=Time2, y=emmean, color=Treatment)) +
   theme(legend.position="bottom")+
   theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())+ 
   ggtitle("Treatment")+
-  labs(y = "Delta subgenial")+
-  annotate(geom="text", x=2, y=1, label="*", color="#000000")+ #24h
-  annotate(geom="text", x=3, y=.84, label="**", color="#000000") #1m
-  
+  labs(y = "Subgenial")
+  # annotate(geom="text", x=2, y=1, label="*", color="#000000")+ #24h
+  # annotate(geom="text", x=3, y=.84, label="**", color="#000000") #1m
+
+# Reponse???
+ggplot(emm0.1, aes(x=Time2, y=response, color=Treatment)) +
+  geom_point(size = 1) + 
+  geom_line(aes(group = Treatment),size = 1)+
+  geom_errorbar(width=.125, aes(ymin=response-SE, ymax=response+SE), position=pd)+
+  # geom_hline(yintercept=0, linetype="dashed")+
+  theme_bw(base_size = 8)+
+  theme(legend.position="bottom")+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())+ 
+  ggtitle("Treatment")+
+  labs(y = "Subgenial")
 
 
 ########### Chapter 2: Baseline correction makes more sense #######
@@ -164,7 +202,6 @@ data$deltaTimes[data$Time == "1m"] = "2) Delta 1m - 24h"
 data$deltaTimes[data$Time == "3m"] = "3) Delta 3m - 1m"
 
 # Define formula
-formula <- IBIdelta_ms ~ Block * IBIno * subBlock2 * Correct + (1|pptNum)
 formula <- delta.subgen_bis ~ Treatment * deltaTimes + (1|Diernr)
 
 data$deltaTimes <- as.ordered(data$deltaTimes)
@@ -173,8 +210,6 @@ data$deltaTimes <- as.ordered(data$deltaTimes)
 d1.1 <- lmer(formula,data=data)
 
 # Stat eval
-emmeans(chosenModel[[1]], pairwise ~ time * Treatment , adjust ="fdr", type="response")
-
 emmeans1.1 <- emmeans(d1.1, pairwise ~ Treatment | deltaTimes, adjust ="fdr", type = "response") # Compute a variable containing all emmeans/contrasts
 # emmeans1.1 <- emmeans(d1.1, pairwise ~ deltaTimes| Treatment, adjust ="fdr", type = "response") # Compute a variable containing all emmeans/contrasts
 
