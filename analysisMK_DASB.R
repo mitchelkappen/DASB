@@ -140,10 +140,12 @@ d0.9 <- glmer(formula,data=data, family = inverse.gaussian(link = "log"),glmerCo
 
 
  
-modelNames = c(d0.1,d0.2,d0.3,d0.4,d0.5,d0.6,d0.7,d0.8,d0.9)
-  
+modelNames = c(d0.1)
+# modelNames = c(d0.1,d0.2,d0.3,d0.4,d0.5,d0.6,d0.7,d0.8,d0.9)
+
 # Model Selection
-tabel <- cbind(AIC(d0.1), AIC(d0.2), AIC(d0.3), AIC(d0.4), AIC(d0.5), AIC(d0.6), AIC(d0.7), AIC(d0.8), AIC(d0.9))
+# tabel <- cbind(AIC(d0.1), AIC(d0.2), AIC(d0.3), AIC(d0.4), AIC(d0.5), AIC(d0.6), AIC(d0.7), AIC(d0.8), AIC(d0.9))
+tabel <- cbind(AIC(d0.1))
 chosenModel = modelNames[which(tabel == min(tabel))] # Get model with lowest AIC
 # chosenModel = d0.1
 
