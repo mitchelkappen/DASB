@@ -45,7 +45,7 @@ data$time <- as.factor(data$time)
 ## Overview different groups ##
 dogs5active <- unique(data$Dier[data$Treatment == "5 sessions active"])
 dogs20active <- unique(data$Dier[data$Treatment == "20 sessions active"])
-# data <- data[data$Treatment!= "20 sessions sham",] # Taking out sham data - not using that here
+data <- data[data$Treatment!= "20 sessions sham",] # Taking out sham data - not using that here
 
 # Define a function to calculate overlaps
 iselement <- function(x, A) {
@@ -102,7 +102,7 @@ emmeans0.2$contrasts
 plot(effect("Time2:Treatment ", chosenModel[[1]])) #just to check
 
 ## Visualisation
-jpeg("../figures/figure3.jpg", width = 3000, height = 1500, res = 300) # Open jpeg file
+tiff("../figures/figure2.tiff", units="in", width=10, height=5, res=300) # Save to tiff
 pd <- position_dodge(0.01) # Plotting setting: move them .05 to the left and right
 # Main effect: Time
 ggplot(emm0.1, aes(x=Time2, y=emmean)) +
@@ -122,7 +122,7 @@ dev.off() # Close jpeg file and save it
 
 # Interaction effect
 pd <- position_dodge(0.03) # Plotting setting: move them .05 to the left and right
-jpeg("../figures/figure4.jpg", width = 3000, height = 1500, res = 300) # Open jpeg file
+tiff("../figures/figure3.tiff", units="in", width=10, height=5, res=300) # Save to tiff
 ggplot(emm0.2, aes(x=Time2, y=emmean, color=Treatment)) +
   geom_point(size = 1) + 
   geom_line(aes(group = Treatment),size = 1)+
@@ -137,4 +137,4 @@ ggplot(emm0.2, aes(x=Time2, y=emmean, color=Treatment)) +
   theme(axis.title = element_text(size = 16))+ # Axis titles
   theme(legend.text = element_text(size = 16))+ # Legend text
   theme(legend.title = element_text(size = 14)) # Legend title
-dev.off() # Close jpeg file and save it
+dev.off() # Close tiff file and save it

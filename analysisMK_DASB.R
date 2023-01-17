@@ -40,7 +40,7 @@ library(effects)
 
 ########## Settings and data getting ###########
 nAGQ = 1 # Set to 1 for eventual analysis
-plotPrefix = "Plots/"
+plotPrefix = "figures/"
 
 # Set and Get directories
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #Set WD to script location
@@ -118,11 +118,11 @@ chosenModel = modelNames[which(tabel == min(tabel))] # Get model with lowest AIC
 
 Anova(chosenModel[[1]], type = 'III') # Run Anova, double square brackets because of list properties
 
-emmeans0.1 <- emmeans(chosenModel[[1]], pairwise ~ Time2, adjust ="fdr", type = "response")
+emmeans0.1 <- emmeans(chosenModel[[1]], pairwise ~ Time2, adjust ="bonf", type = "response")
 emm0.1 <- summary(emmeans0.1)$emmeans
 emmeans0.1$contrasts
 
-emmeans0.2 <- emmeans(chosenModel[[1]], pairwise ~ Treatment | Time2, adjust ="fdr", type = "response")
+emmeans0.2 <- emmeans(chosenModel[[1]], pairwise ~ Treatment | Time2, adjust ="bonf", type = "response")
 emm0.2 <- summary(emmeans0.2)$emmeans
 emmeans0.2$contrasts
 plot(effect("Time2", chosenModel[[1]])) #just to check
@@ -144,7 +144,7 @@ ggplot(emm0.1, aes(x=Time2, y=emmean)) +
   labs(y = "Subgenial")
 
 # Interaction effect
-ggplot(emm0.2, aes(x=Time2, y=emmean, color=Treatment)) +
+plot <- ggplot(emm0.2, aes(x=Time2, y=emmean, color=Treatment)) +
   geom_point(size = 1) + 
   geom_line(aes(group = Treatment),size = 1)+
   geom_errorbar(width=.125, aes(ymin=emmean-SE, ymax=emmean+SE), position=pd)+
@@ -155,3 +155,8 @@ ggplot(emm0.2, aes(x=Time2, y=emmean, color=Treatment)) +
   ggtitle("Treatment")+
   labs(y = "Subgenial")
   # annotate(geom="text", x=2, y=1.04, label="*", color="#000000") #24h
+
+# Save to tiff
+tiff(paste0(plotPrefix, "figure3.tiff"), units="in", width=8, height=5, res=300)
+plot
+dev.off()
